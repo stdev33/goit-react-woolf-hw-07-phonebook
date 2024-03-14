@@ -1,17 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import ContactItem from '../ContactItem/ContactItem';
+import { fetchContacts, deleteContact } from '../../redux/contacts/thunks';
 import {
-  deleteContact,
   selectContacts,
-  selectFilter,
-} from '../../redux/contactsSlice';
+  selectIsLoading,
+  selectError,
+} from '../../redux/contacts/selectors';
+import { selectFilter } from '../../redux/filter/selectors';
+import ContactItem from '../ContactItem/ContactItem';
 import css from './ContactList.module.css';
 
 const ContactList = () => {
   const contacts = useSelector(selectContacts);
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
   const filter = useSelector(selectFilter);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(filter.toLowerCase())
@@ -19,12 +27,14 @@ const ContactList = () => {
 
   return (
     <ul className={css.contactList}>
-      {filteredContacts.map(({ id, name, number }) => (
+      {isLoading && <p>Loading...</p>}
+      {error && <p>Error: {error}</p>}
+      {filteredContacts.map(({ id, name, phone }) => (
         <ContactItem
           key={id}
           id={id}
           name={name}
-          number={number}
+          number={phone}
           onDelete={() => dispatch(deleteContact(id))}
         />
       ))}
